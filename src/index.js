@@ -7,11 +7,10 @@ kaboom({
     font: "sinko",
     canvas: document.querySelector("#mycanvas"),
     background: [100, 100, 150],
-})
-
+});
 
 const h = 48;
-const w = width() / 100 * 25;
+const w = width() / 4;
 const speed = 350;
 const size = {
     w,
@@ -116,13 +115,17 @@ const createPlayer = ({ multiplier }) => add([
         flipX: multiplier,
     }),
     body(),
-    pos(((width() - 100) * multiplier), 0),
     area(),
+    pos(((width() - 100) * multiplier), 0),
+    solid(),
     "player",
+    { multiplier }
 ]);
 
 scene("game", () => {
+
     createRects();
+    gravity(9.82 ** 2)
     let [
         player,
         player2
@@ -136,7 +139,6 @@ scene("game", () => {
         ];
 
     let currentPlayer = player;
-
     onKeyPressRepeat("left", () => {
         moveLeft(currentPlayer);
     });
@@ -145,9 +147,14 @@ scene("game", () => {
         moveRight(currentPlayer);
     });
 
-    onKeyPressRepeat("space", () => {
+    onKeyPress("space", () => {
         jump(currentPlayer);
 
+
+    });
+
+    onKeyPress("q", () => {
+        shoot(currentPlayer);
     });
 
     onKeyPress("enter", () => {
@@ -155,45 +162,58 @@ scene("game", () => {
             ? player2
             : player;
     });
-
-    onKeyPress("q", () => {
-        shoot(currentPlayer);
-    });
 });
 
 const moveLeft = (player) => {
     player.flipX(true);
+    player.multiplier = 1;
     player.move(-speed, 0);
 }
 
 const moveRight = (player) => {
     player.flipX(false);
+    player.multiplier = 0;
     player.move(speed, 0);
 }
 
 const jump = (player) => {
-    if (player.isGrounded()) {
-        player.jump(300);
+    if (!player.isGrounded()) {
+        return;
     }
+
+    player.jump(100);
 }
 
 const shoot = (player) => {
+    if (!player.isGrounded()) {
+        return;
+    }
+
     const { x, y } = player.pos;
-    const { flipX } = player;
-    const angle = flipX ? -90 : 90;
+    const [w, h] = [100, 100]; //TODO: get size from player
+    const { multiplier } = player;
+    const speedMultiplier = multiplier ? -1 : 1;
     const speed = 500;
-    console.log(player);
+    const bulletSize = 35;
+
+    const cannonEdgeX = multiplier ?? w + 1;
+    const bulletSpawnX = cannonEdgeX + bulletSize;
+    const posMultiplier = speedMultiplier + 1;
+    const bulletX = x + (bulletSpawnX * posMultiplier);
+
+    const cannonEdgeY = multiplier ?? (y / 2) + 1;
+    const bulletSpawnY = cannonEdgeY + bulletSize;
+    const bulletY = y + bulletSpawnY;
+
     const bullet = add([
         sprite("apple", {
-            width: 35,
-            height: 35,
-            angle
+            width: bulletSize,
+            height: bulletSize,
         }),
         solid(),
-        pos(x + 100, y * 1.5),
+        pos(bulletX, bulletY),
         area(),
-        color(255, 255, 255),
-        move(0, +speed),
+        move(player.pos.angle(x * speedMultiplier, y), speed * speedMultiplier),
         cleanup(),
         "bullet"
     ]);
