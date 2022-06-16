@@ -117,7 +117,8 @@ const createPlayer = ({ multiplier }) => add([
     }),
     body(),
     pos(((width() - 100) * multiplier), 0),
-    area()
+    area(),
+    "player",
 ]);
 
 scene("game", () => {
@@ -154,6 +155,10 @@ scene("game", () => {
             ? player2
             : player;
     });
+
+    onKeyPress("q", () => {
+        shoot(currentPlayer);
+    });
 });
 
 const moveLeft = (player) => {
@@ -171,5 +176,32 @@ const jump = (player) => {
         player.jump(300);
     }
 }
+
+const shoot = (player) => {
+    const { x, y } = player.pos;
+    const { flipX } = player;
+    const angle = flipX ? -90 : 90;
+    const speed = 500;
+    console.log(player);
+    const bullet = add([
+        sprite("apple", {
+            width: 35,
+            height: 35,
+            angle
+        }),
+        solid(),
+        pos(x + 100, y * 1.5),
+        area(),
+        color(255, 255, 255),
+        move(0, +speed),
+        cleanup(),
+        "bullet"
+    ]);
+
+    bullet.onCollide("player", (player) => {
+        destroy(bullet);
+    })
+}
+
 
 go("game");
