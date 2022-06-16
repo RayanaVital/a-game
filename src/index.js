@@ -1,4 +1,5 @@
 import kaboom from "kaboom";
+import "./styles/style.css";
 
 kaboom({
     width: 800,
