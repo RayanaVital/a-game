@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "esbuild index.js --bundle > build.js"
+    "build": "esbuild --bundle src/index.js --outbase=src --outfile=www/main.js --minify",
+    "watch": "npm run build -- --watch",
+    "start": "npm run build -- --servedir=www"
   },
   "author": "Rayana e Pablo",
   "license": "MIT",
