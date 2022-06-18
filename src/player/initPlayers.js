@@ -1,4 +1,4 @@
-export const initPlayers = ({ size }) => {
+export const initPlayers = (props) => {
   return {
     players: [
       {
@@ -7,7 +7,7 @@ export const initPlayers = ({ size }) => {
           15, 67
         ],
         multiplier: 0,
-        size,
+        ...props,
       },
       {
         hp: 10100,
@@ -15,9 +15,9 @@ export const initPlayers = ({ size }) => {
           26, 78
         ],
         multiplier: 1,
-        size,
+        ...props,
       }
     ],
-    currentPlayer: null
+    currentPlayer: 0
   }
 };

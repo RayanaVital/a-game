@@ -1,5 +1,5 @@
 export const handleProgressBar = {
-  fill(progressBar) {
+  fill(progressBar, width) {
     if (progressBar.width > width() - 20) {
       progressBar.width = width() - 10;
       progressBar.userAction = "unfill";
@@ -8,7 +8,7 @@ export const handleProgressBar = {
 
     progressBar.width += 10;
   },
-  unfill(progressBar) {
+  unfill(progressBar, width) {
     if (progressBar.width <= 15) {
       progressBar.width = 5;
       progressBar.userAction = "fill";
