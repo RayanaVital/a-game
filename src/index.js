@@ -1,4 +1,10 @@
 import kaboom from "kaboom";
+import { createFloor } from "./map/createFloor";
+import { moveLeft, moveRight, jump, shoot } from "./player/actions";
+import { createPlayer } from "./player/createPlayer";
+import { initPlayers } from "./player/initPlayers";
+import { createPowerBar } from "./powerBar/createPowerBar";
+import { handleProgressBar } from "./powerBar/handleProgressBar";
 import "./styles/style.css";
 
 kaboom({
@@ -8,95 +14,54 @@ kaboom({
     canvas: document.querySelector("#mycanvas"),
     background: [100, 100, 150],
 });
-
-const h = 48;
-const w = width() / 4;
-const speed = 350;
-const size = {
-    w,
-    h
+export const size = 100;
+const cannonSlice = 1.25;
+export const speed = 350;
+const floorSize = {
+    w: width() / 3,
+    h: 48
 };
 
-const ladoEsquerdo = 0;
-const ladoDireito = width() - w;
-
+const leftSide = 0;
+const rightSide = width() - floorSize.w;
+const floor = {
+    1: 200,
+    2: 400
+};
 const rects = [
     {
-        size,
+        size: floorSize,
         bgColor: [127, 7, 255],
         position: {
-            x: ladoEsquerdo,
-            y: 200
+            x: leftSide,
+            y: floor[1]
         }
     },
     {
-        size,
+        size: floorSize,
         bgColor: [200, 7, 255],
         position: {
-            x: ladoEsquerdo,
-            y: 400
+            x: leftSide,
+            y: floor[2]
         }
     },
     {
-        size,
+        size: floorSize,
         bgColor: [127, 255, 0],
         position: {
-            x: ladoDireito,
-            y: 200
+            x: rightSide,
+            y: floor[1]
         }
     },
     {
-        size,
+        size: floorSize,
         bgColor: [107, 200, 255],
         position: {
-            x: ladoDireito,
-            y: 400
+            x: rightSide,
+            y: floor[2]
         }
     }
 ];
-
-const createRects = () => {
-    rects.forEach(rectangle => {
-        const { size, position, bgColor } = rectangle;
-        const { w, h } = size;
-        const { x, y } = position;
-        const r = bgColor[0];
-        const g = bgColor[1];
-        const b = bgColor[2];
-        add([
-            rect(w, h),
-            pos(x, y),
-            outline(4),
-            area(),
-            solid(),
-            color(r, g, b)
-        ]);
-    });
-}
-
-const createGameInstance = (props) => {
-    return {
-        players: {
-            1: {
-                hp: 1000,
-                angles: [
-                    15, 67
-                ],
-                multiplier: 0,
-            },
-            2: {
-                hp: 10100,
-                angles: [
-                    26, 78
-                ],
-                multiplier: 1,
-            }
-        },
-        currentPlayer: 1
-    }
-}
-
-let gameInstance = createGameInstance();
 
 loadSprite("apple", "sprites/apple.png", {
     width: 10,
@@ -104,53 +69,33 @@ loadSprite("apple", "sprites/apple.png", {
 });
 
 loadSprite("cannon", "sprites/cannon.png", {
-    sliceX: 1.25,
-    sliceY: 1.25
+    sliceX: cannonSlice,
+    sliceY: cannonSlice
+
 });
 
-const createPlayer = ({ multiplier }) => add([
-    sprite("cannon", {
-        width: 100,
-        height: 100,
-        flipX: multiplier,
-    }),
-    body(),
-    area(),
-    pos(((width() - 100) * multiplier), 0),
-    solid(),
-    "player",
-    { multiplier }
-]);
-
 scene("game", () => {
+    gravity(9.82 ** 2);
+    createFloor(rects);
 
-    createRects();
-    gravity(9.82 ** 2)
-    let [
-        player,
-        player2
-    ] = [
-            createPlayer({
-                multiplier: 0
-            }),
-            createPlayer({
-                multiplier: 1
-            })
-        ];
+    let progressBar = createPowerBar(width(), height());
+    let { players } = initPlayers({ size });
+    let [player, player2] = players.map(createPlayer);
 
-    let currentPlayer = player;
+    players.currentPlayer = players.currentPlayer ?? player;
+
     onKeyPressRepeat("left", () => {
-        moveLeft(currentPlayer);
+        moveLeft(currentPlayer, speed);
     });
 
     onKeyPressRepeat("right", () => {
-        moveRight(currentPlayer);
+        moveRight(currentPlayer, speed);
     });
 
-    onKeyPress("space", () => {
-        jump(currentPlayer);
-
-
+    onKeyPressRepeat("space", () => {
+        const { userAction } = progressBar;
+        const move = handleProgressBar[userAction];
+        move(progressBar);
     });
 
     onKeyPress("q", () => {
@@ -162,66 +107,28 @@ scene("game", () => {
             ? player2
             : player;
     });
-});
 
-const moveLeft = (player) => {
-    player.flipX(true);
-    player.multiplier = 1;
-    player.move(-speed, 0);
-}
 
-const moveRight = (player) => {
-    player.flipX(false);
-    player.multiplier = 0;
-    player.move(speed, 0);
-}
+    onCollide("player", "bullet", (player, bullet, colision) => {
+        if (!bullet.exists()) {
+            console.log(player.hp());
+            return;
+        }
 
-const jump = (player) => {
-    if (!player.isGrounded()) {
-        return;
-    }
+        if (player.hp() <= 0) {
+            destroy(player);
+            return;
+        }
 
-    player.jump(100);
-}
+        player.hurt(1);
+        destroy(bullet);
 
-const shoot = (player) => {
-    if (!player.isGrounded()) {
-        return;
-    }
+    });
 
-    const { x, y } = player.pos;
-    const [w, h] = [100, 100]; //TODO: get size from player
-    const { multiplier } = player;
-    const speedMultiplier = multiplier ? -1 : 1;
-    const speed = 500;
-    const bulletSize = 35;
-
-    const cannonEdgeX = multiplier ?? w + 1;
-    const bulletSpawnX = cannonEdgeX + bulletSize;
-    const posMultiplier = speedMultiplier + 1;
-    const bulletX = x + (bulletSpawnX * posMultiplier);
-
-    const cannonEdgeY = multiplier ?? (y / 2) + 1;
-    const bulletSpawnY = cannonEdgeY + bulletSize;
-    const bulletY = y + bulletSpawnY;
-
-    const bullet = add([
-        sprite("apple", {
-            width: bulletSize,
-            height: bulletSize,
-        }),
-        solid(),
-        pos(bulletX, bulletY),
-        area(),
-        move(player.pos.angle(x * speedMultiplier, y), speed * speedMultiplier),
-        cleanup(),
-        "bullet"
-    ]);
-
-    bullet.onCollide("player", (player) => {
+    onCollide("bullet", "bullet", (bullet) => {
         destroy(bullet);
     })
-}
 
+});
 
 go("game");
