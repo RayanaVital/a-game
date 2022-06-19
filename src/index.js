@@ -6,6 +6,8 @@ import { initPlayers } from "./player/initPlayers";
 import { createPowerBar } from "./powerBar/createPowerBar";
 import { handleProgressBar } from "./powerBar/handleProgressBar";
 import { initFloors } from "./map/initFloors";
+import { initWall } from "./map/initWall";
+import { createWall } from "./map/createWall";
 import "./styles/style.css";
 
 kaboom({
@@ -29,6 +31,7 @@ export const floorSize = {
 export const rightSide = width()
     - floorSize.w;
 export const leftSide = 0;
+
 const floor = {
     1: 200,
     2: 400
@@ -49,6 +52,9 @@ loadSprite("apple", "sprites/apple.png", {
 
 scene("game", () => {
     gravity(gravityValue);
+
+    const walls = initWall(width(), height());
+    createWall(walls);
 
     const floors = initFloors({ floor, floorSize, leftSide, rightSide });
     createFloor(floors);

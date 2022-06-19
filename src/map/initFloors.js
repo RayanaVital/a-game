@@ -31,7 +31,8 @@ export const initFloors = ({ floor, floorSize, leftSide, rightSide }) => {
         x: rightSide,
         y: floor[2]
       }
-    }
+    },
+    
   ]
 }
 
