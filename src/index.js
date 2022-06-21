@@ -67,8 +67,11 @@ scene("game", () => {
     players.currentPlayer = player;
 
     let currentPlayerName = add([
-        text(players.currentPlayer.name),
-        pos(24, 24),
+        text(players.currentPlayer.name, {
+            size: 24,
+        }),
+        pos(center()),
+        color(255, 0, 0)
     ])
 
     onKeyPressRepeat("left", () => {
