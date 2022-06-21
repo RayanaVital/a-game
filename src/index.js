@@ -66,6 +66,11 @@ scene("game", () => {
 
     players.currentPlayer = player;
 
+    let currentPlayerName = add([
+        text(players.currentPlayer.name),
+        pos(24, 24),
+    ])
+
     onKeyPressRepeat("left", () => {
         moveLeft(players.currentPlayer, speed);
     });
@@ -88,6 +93,8 @@ scene("game", () => {
         players.currentPlayer = players.currentPlayer == player
             ? player2
             : player;
+        
+        currentPlayerName.text = players.currentPlayer.name;
     });
 
     onCollide("player", "bullet", (player, bullet, colision) => {

@@ -7,6 +7,7 @@ export const initPlayers = (props) => {
           15, 67
         ],
         multiplier: 0,
+        name: 'Player 1',
         ...props,
       },
       {
@@ -15,6 +16,7 @@ export const initPlayers = (props) => {
           26, 78
         ],
         multiplier: 1,
+        name: 'Player 2',
         ...props,
       }
     ],
